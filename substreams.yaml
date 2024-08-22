@@ -12,6 +12,7 @@ protobuf:
 imports:
   sql: https://github.com/streamingfast/substreams-sink-sql/releases/download/protodefs-v1.0.3/substreams-sink-sql-protodefs-v1.0.3.spkg
   solana: https://github.com/streamingfast/firehose-solana/releases/download/v0.1.1/solana-v0.1.1.spkg
+  dex_trades: https://spkg.io/topledger/tl-solana-dex-trades-1-0-10-v1.0.10.spkg
 
 binaries:
   default:
@@ -24,7 +25,14 @@ modules:
     inputs:
       - source: sf.solana.type.v1.Block
     output:
-      type: proto:sol.block.v1.BlockMeta
+      type: proto:sf.solana.type.v1.Block
+
+  - name: map_trades
+    kind: map
+    inputs:
+      - map: dex_trades:map_block
+    output:
+      type: proto:sf.solana.dex.trades.v1.Output
 
   - name: db_out
     kind: map

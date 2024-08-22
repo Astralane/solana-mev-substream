@@ -4,6 +4,7 @@ use crate::pb::sol::block::v1::BlockMeta;
 use substreams_database_change::pb::database::DatabaseChanges;
 use substreams_database_change::tables::Tables as DatabaseChangeTables;
 use substreams_solana::pb::sf::solana::r#type::v1::Block;
+use crate::pb::sf::solana::dex::trades::v1::Output;
 
 #[substreams::handlers::map]
 fn map_block(block: Block) -> Result<BlockMeta, substreams::errors::Error> {
@@ -22,6 +23,10 @@ fn map_block(block: Block) -> Result<BlockMeta, substreams::errors::Error> {
     })
 }
 
+#[substreams::handlers::map]
+fn map_trades(trades: Output) -> Result<Output, substreams::errors::Error>{
+    Ok(trades)
+}
 #[substreams::handlers::map]
 fn db_out(bm: BlockMeta) -> Result<DatabaseChanges, substreams::errors::Error> {
     // Initialize changes container
