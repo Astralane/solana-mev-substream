@@ -47,10 +47,6 @@ sink:
   module: db_out
   type: sf.substreams.sink.sql.v1.Service
   config:
-    schema: "./schema.sql"
+    engine: clickhouse
+    schema: "./schema.clickhouse.sql"
     wire_protocol_access: true
-    engine: postgres
-    postgraphile_frontend:
-      enabled: true
-    pgweb_frontend:
-      enabled: true

@@ -33,9 +33,9 @@ fn db_out(bm: BlockMeta) -> Result<DatabaseChanges, substreams::errors::Error> {
     let mut tables = DatabaseChangeTables::new();
 
     tables
-        .create_row("block", [("hash", bm.hash)])
-        .set("parent_hash", bm.parent_hash)
-        .set("block_height", bm.slot)
-        .set("transaction_count", bm.transaction_count);
+        .create_row("block_meta", [("hash", bm.hash)])
+        .set("id", bm.parent_hash)
+        .set("number", bm.slot)
+        .set("timestamp", bm.transaction_count.to_string());
     Ok(tables.to_database_changes())
 }
