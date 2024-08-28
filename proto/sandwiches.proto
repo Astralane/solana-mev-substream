@@ -1,0 +1,25 @@
+syntax = "proto2";
+
+package sf.solana.dex.sandwiches.v1;
+
+message SandwichOutput {
+    repeated Sandwich data = 1;
+}
+message Sandwich {
+    required SwapDto frontrun = 1;
+    repeated SwapDto victim_swaps = 2;
+    required SwapDto backrun = 3;
+}
+
+message SwapDto {
+    required uint64 block_slot = 1;
+    required string tx_id = 2;
+    required string signer = 3;
+    required string pool_address = 4;
+    required string token_in = 5;
+    required string token_out = 6;
+    required double amount_in = 7;
+    required double amount_out = 8;
+    required uint64 txn_fee = 9;
+    required string multilocation = 10;
+}

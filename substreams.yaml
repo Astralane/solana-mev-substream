@@ -6,13 +6,14 @@ package:
 protobuf:
   files:
     - block_meta.proto
+    - sandwiches.proto
   importPaths:
     - ./proto
 
 imports:
   sql: https://github.com/streamingfast/substreams-sink-sql/releases/download/protodefs-v1.0.3/substreams-sink-sql-protodefs-v1.0.3.spkg
   solana: https://github.com/streamingfast/firehose-solana/releases/download/v0.1.1/solana-v0.1.1.spkg
-  dex_trades: https://spkg.io/topledger/tl-solana-dex-trades-1-0-10-v1.0.10.spkg
+  dex_trades: https://spkg.io/topledger/tl-solana-dex-trades-1-0-15-v1.0.15.spkg
 
 binaries:
   default:
@@ -32,7 +33,7 @@ modules:
     inputs:
       - map: dex_trades:map_block
     output:
-      type: proto:sf.solana.dex.trades.v1.Output
+      type: proto:sf.solana.dex.sandwiches.v1.SandwichOutput
 
   - name: db_out
     kind: map
@@ -42,11 +43,3 @@ modules:
       type: proto:sf.substreams.sink.database.v1.DatabaseChanges
 
 network: solana
-
-sink:
-  module: db_out
-  type: sf.substreams.sink.sql.v1.Service
-  config:
-    engine: clickhouse
-    schema: "./schema.clickhouse.sql"
-    wire_protocol_access: true

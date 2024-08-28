@@ -1,5 +1,5 @@
 ENDPOINT ?= mainnet.sol.streamingfast.io:443
-DSN ?= clickhouse://default:@localhost:18123/default
+DSN ?= clickhouse://default:@127.0.0.1:8123/default
 
 .PHONY: build
 build:
@@ -19,9 +19,8 @@ protogen:
 
 .PHONY: stream_db
 stream_db: build
-	echo DSN=$(DNS)
-	substreams-sink-sql setup "$(DSN)" --ignore-duplicate-table-errors ./substreams.yaml
-	substreams-sink-sql run "$(DSN)" ./substreams.yaml
+	substreams-sink-sql setup "$(DSN)" ./sink/substreams.dev.yaml
+	substreams-sink-sql run "$(DSN)" ./sink/substreams.dev.yaml
 
 .PHONY: package
 package:
