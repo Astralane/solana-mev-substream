@@ -1,54 +1,84 @@
-use crate::pb::sf::solana::r#type::v1::ConfirmedTransaction;
+use crate::constants::SYSTEM_PROGRAM_ADDRESS;
 use crate::pb::sf::solana::transfer::v1::SystemTransfer;
+use crate::primitives::TransferInfo;
 use borsh::BorshDeserialize;
-
-pub const SYSTEM_PROGRAM_ADDRESS: &str = "11111111111111111111111111111111";
+use substreams_solana::pb::sf::solana::r#type::v1::Block;
 
 #[derive(Debug, BorshDeserialize)]
 pub struct TransferLayout {
     pub lamports: u64,
 }
 
-pub fn parse_transactions(
-    tx: substreams_solana::pb::sf::solana::r#type::v1::ConfirmedTransaction,
-) -> Option<Vec<SystemTransfer>> {
-    let meta = tx.meta?;
-    let msg = tx.transaction?.message?;
-    let ixs = msg.instructions;
-    let accounts = msg
-        .account_keys
-        .into_iter()
-        .map(|a| bs58::encode(a).into_string())
-        .collect::<Vec<_>>();
-
+pub fn map_transfers(block: Block) -> Option<Vec<SystemTransfer>> {
+    let transactions = block.transactions;
     let mut transfers = vec![];
-    //add data addresses store
-    for (idx, ix) in ixs.into_iter().enumerate() {
-        let program = &accounts[ix.program_id_index as usize];
-        if program != SYSTEM_PROGRAM_ADDRESS {
+
+    for transaction in transactions {
+        let Some(meta) = transaction.meta.clone() else {
             continue;
+        };
+        let Some(tx) = transaction.transaction.clone() else {
+            continue;
+        };
+        let Some(msg) = tx.clone().message else {
+            continue;
+        };
+        let ixs = msg.instructions;
+        let accounts = transaction.resolved_accounts_as_strings();
+
+        //add data addresses store
+        for (idx, ix) in ixs.into_iter().enumerate() {
+            let program = &accounts[ix.program_id_index as usize];
+            if program != SYSTEM_PROGRAM_ADDRESS {
+                continue;
+            }
+            let maybe_transfer = parse_system_instruction(&ix.data, &ix.accounts, &accounts);
+            if let Some(info) = maybe_transfer {
+                let st = SystemTransfer {
+                    slot: block.slot,
+                    tx_id: bs58::encode(&tx.signatures[0]).into_string(),
+                    instruction_index: idx as u32,
+                    inner_instruction_index: 0,
+                    is_inner_instruction: false,
+                    from: info.from,
+                    to: info.to,
+                    lamports: info.lamports,
+                };
+                transfers.push(st)
+            }
+            // add inner instruction transfers
+            meta.inner_instructions
+                .iter()
+                .filter(|i| i.index as usize == idx)
+                .for_each(|inner_ixs| {
+                    inner_ixs.instructions.iter().enumerate().for_each(
+                        |(inner_ix_idx, inner_ix)| {
+                            let program = &accounts[inner_ix.program_id_index as usize];
+                            if program != SYSTEM_PROGRAM_ADDRESS {
+                                return;
+                            }
+                            let maybe_transfer = parse_system_instruction(
+                                &inner_ix.data,
+                                &inner_ix.accounts,
+                                &accounts,
+                            );
+                            if let Some(info) = maybe_transfer {
+                                let st = SystemTransfer {
+                                    slot: block.slot,
+                                    tx_id: bs58::encode(&tx.signatures[0]).into_string(),
+                                    instruction_index: idx as u32,
+                                    inner_instruction_index: inner_ix_idx as u32,
+                                    is_inner_instruction: true,
+                                    from: info.from,
+                                    to: info.to,
+                                    lamports: info.lamports,
+                                };
+                                transfers.push(st)
+                            }
+                        },
+                    )
+                });
         }
-        let maybe_transfer = parse_system_instruction(&ix.data, &ix.accounts, &accounts);
-        if let Some(t) = maybe_transfer {
-            transfers.push(t)
-        }
-        // add inner instruction transfers
-        meta.inner_instructions
-            .iter()
-            .filter(|i| i.index as usize == idx)
-            .for_each(|inner_ixs| {
-                inner_ixs.instructions.iter().for_each(|inner_ix| {
-                    let program = &accounts[inner_ix.program_id_index as usize];
-                    if program != SYSTEM_PROGRAM_ADDRESS {
-                        return;
-                    }
-                    let maybe_transfer =
-                        parse_system_instruction(&inner_ix.data, &inner_ix.accounts, &accounts);
-                    if let Some(t) = maybe_transfer {
-                        transfers.push(t)
-                    }
-                })
-            });
     }
 
     Some(transfers)
@@ -58,7 +88,7 @@ pub fn parse_system_instruction(
     instruction_data: &Vec<u8>,
     account_indices: &Vec<u8>,
     accounts: &Vec<String>,
-) -> Option<SystemTransfer> {
+) -> Option<TransferInfo> {
     let (disc_bytes, rest) = instruction_data.split_at(4);
     //ref: https://docs.rs/solana-program/latest/solana_program/system_instruction/enum.SystemInstruction.html
     match disc_bytes[0] {
@@ -66,11 +96,7 @@ pub fn parse_system_instruction(
             let TransferLayout { lamports, .. } = TransferLayout::try_from_slice(rest).ok()?;
             let from_idx = account_indices[0];
             let to_idx = account_indices[1];
-            substreams::log::println(format!(
-                "from {:?} to {:?} accounts {:?}",
-                from_idx, to_idx, accounts
-            ));
-            Some(SystemTransfer {
+            Some(TransferInfo {
                 from: accounts[from_idx as usize].clone(),
                 to: accounts[to_idx as usize].clone(),
                 lamports,

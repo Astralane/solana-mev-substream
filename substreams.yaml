@@ -29,6 +29,13 @@ modules:
     output:
       type: proto:sf.solana.transfer.v1.TransferOutput
 
+  - name: map_jito_tips
+    kind: map
+    inputs:
+      - map: map_system_transfers
+    output:
+      type: proto:sf.solana.transfer.v1.TransferOutput
+
   - name: map_trades
     kind: map
     inputs:

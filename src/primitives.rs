@@ -1,9 +1,11 @@
 use crate::pb::sf::solana::dex::sandwiches::v1::SwapDto;
 use crate::pb::sf::solana::dex::trades::v1::TradeData;
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct TipInfo {
-    amount: u64,
+#[derive(Clone)]
+pub struct TransferInfo {
+    pub from: String,
+    pub to: String,
+    pub lamports: u64,
 }
 
 #[derive(Clone, Debug, PartialEq)]
