@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package sf.solana.transfer.v1;
+
+message TransferOutput {
+    repeated SystemTransfer transfers = 1;
+}
+message SystemTransfer {
+    string from = 1;
+    string to = 2;
+    uint64 lamports = 3;
+}

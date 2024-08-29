@@ -24,6 +24,13 @@ pub mod sf {
                 // @@protoc_insertion_point(sf.solana.type.v1)
             }
         }
+        pub mod transfer {
+            // @@protoc_insertion_point(attribute:sf.solana.transfer.v1)
+            pub mod v1 {
+                include!("sf.solana.transfer.v1.rs");
+                // @@protoc_insertion_point(sf.solana.transfer.v1)
+            }
+        }
     }
 }
 pub mod sol {
