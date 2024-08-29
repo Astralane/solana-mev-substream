@@ -1,4 +1,4 @@
-syntax = "proto3";
+syntax = "proto2";
 
 package sf.solana.transfer.v1;
 
@@ -6,12 +6,12 @@ message TransferOutput {
     repeated SystemTransfer transfers = 1;
 }
 message SystemTransfer {
-    uint64 slot = 1;
-    string tx_id = 2;
-    uint32 instruction_index = 3;
-    uint32 inner_instruction_index = 4;
-    bool is_inner_instruction = 5;
-    string from = 6;
-    string to = 7;
-    uint64 lamports = 8;
+    required uint64 slot = 1;
+    required string tx_id = 2;
+    required uint32 instruction_index = 3;
+    required string from = 4;
+    required string to = 5;
+    required uint64 lamports = 6;
+    required uint32 inner_instruction_index = 7;
+    required bool is_inner_instruction = 8;
 }
