@@ -13,7 +13,7 @@ pub fn map_transfers(block: Block) -> Option<Vec<SystemTransfer>> {
     let transactions = block.transactions;
     let mut transfers = vec![];
 
-    for transaction in transactions {
+    for (tx_idx, transaction) in transactions.into_iter().enumerate() {
         let Some(meta) = transaction.meta.clone() else {
             continue;
         };
@@ -43,6 +43,7 @@ pub fn map_transfers(block: Block) -> Option<Vec<SystemTransfer>> {
                     from: info.from,
                     to: info.to,
                     lamports: info.lamports,
+                    transaction_index: tx_idx as u32,
                 };
                 transfers.push(st)
             }
@@ -72,6 +73,7 @@ pub fn map_transfers(block: Block) -> Option<Vec<SystemTransfer>> {
                                     from: info.from,
                                     to: info.to,
                                     lamports: info.lamports,
+                                    transaction_index: tx_idx as u32,
                                 };
                                 transfers.push(st)
                             }
@@ -85,9 +87,9 @@ pub fn map_transfers(block: Block) -> Option<Vec<SystemTransfer>> {
 }
 
 pub fn parse_system_instruction(
-    instruction_data: &Vec<u8>,
-    account_indices: &Vec<u8>,
-    accounts: &Vec<String>,
+    instruction_data: &[u8],
+    account_indices: &[u8],
+    accounts: &[String],
 ) -> Option<TransferInfo> {
     let (disc_bytes, rest) = instruction_data.split_at(4);
     //ref: https://docs.rs/solana-program/latest/solana_program/system_instruction/enum.SystemInstruction.html

@@ -24,5 +24,7 @@ pub struct SystemTransfer {
     pub inner_instruction_index: u32,
     #[prost(bool, required, tag="8")]
     pub is_inner_instruction: bool,
+    #[prost(uint32, required, tag="9")]
+    pub transaction_index: u32,
 }
 // @@protoc_insertion_point(module)

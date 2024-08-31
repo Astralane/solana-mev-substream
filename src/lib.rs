@@ -4,7 +4,6 @@ mod primitives;
 mod sandwiches;
 mod system_transfers;
 
-use std::fmt::format;
 use crate::constants::JITO_TIPS;
 use crate::pb::sf::solana::dex::sandwiches::v1::SandwichOutput;
 use crate::pb::sf::solana::dex::trades::v1::Output;
@@ -36,7 +35,10 @@ fn map_jito_tips(out: TransferOutput) -> Result<TransferOutput, substreams::erro
     Ok(TransferOutput { transfers })
 }
 #[substreams::handlers::map]
-fn map_trades(dex_trades: Output) -> Result<SandwichOutput, substreams::errors::Error> {
-    let sandwiches = map_sandwiches(dex_trades.data);
+fn map_trades(
+    dex_trades: Output,
+    block: Block,
+) -> Result<SandwichOutput, substreams::errors::Error> {
+    let sandwiches = map_sandwiches(dex_trades.data, block);
     Ok(SandwichOutput { data: sandwiches })
 }

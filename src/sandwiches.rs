@@ -1,25 +1,41 @@
-use crate::pb::sf::solana::dex::sandwiches::v1::{Sandwich, SwapDto};
+use crate::pb::sf::solana::dex::sandwiches::v1::{Sandwich, SwapInfo};
 use crate::pb::sf::solana::dex::trades::v1::TradeData;
-use crate::primitives::{NormalizedSwap, PossibleSandwich};
+use crate::primitives::{NormalizedSwap, PossibleSandwich, SwapInfoStore};
 use itertools::Itertools;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
-use std::mem::swap;
+use substreams_solana::pb::sf::solana::r#type::v1::Block;
 
-pub fn map_sandwiches(trades: Vec<TradeData>) -> Vec<Sandwich> {
+pub fn map_sandwiches(trades: Vec<TradeData>, block: Block) -> Vec<Sandwich> {
+    //create a map of tx_id to index
+    let mut tx_index_store = HashMap::new();
+    for (idx, transaction) in block.transactions.into_iter().enumerate() {
+        if let Some(tx) = transaction.transaction {
+            tx_index_store.insert(bs58::encode(&tx.signatures[0]).into_string(), idx as u32);
+        }
+    }
+
+    //convert trades to NormalizedSwap form
     let swaps = trades
         .clone()
         .into_iter()
-        .map(|s| NormalizedSwap::from(s))
+        .map(|s| {
+            let tx_idx = tx_index_store.get(&s.tx_id).cloned().unwrap_or_default();
+            NormalizedSwap::from((tx_idx, s))
+        })
         .collect::<Vec<_>>();
 
+    //create a map of multi_location to NormalizedSwap
     let swap_info = swaps
         .clone()
         .into_iter()
-        .map(|ns| (ns.id, ns.data))
+        .map(|ns| (ns.multi_location.clone(), ns))
         .collect::<HashMap<_, _>>();
 
-    let mut sandwiches = get_possible_sandwiches(swaps);
+    //get possible sandwiches
+    let sandwiches = get_possible_sandwiches(swaps);
+
+    //map possible sandwiches to sandwich data
     sandwiches
         .into_iter()
         .filter_map(|ps| calculate_sandwich(ps, &swap_info, 0))
@@ -29,7 +45,7 @@ pub fn map_sandwiches(trades: Vec<TradeData>) -> Vec<Sandwich> {
 
 fn calculate_sandwich(
     ps: PossibleSandwich,
-    swap_info: &HashMap<String, TradeData>,
+    swap_info: &SwapInfoStore,
     _recursive: u8,
 ) -> Option<Vec<Sandwich>> {
     let PossibleSandwich {
@@ -42,15 +58,15 @@ fn calculate_sandwich(
         return None;
     }
 
-    if !has_pool_overlap(&possible_frontruns, &possible_backrun, &victims, &swap_info) {
+    if !has_pool_overlap(&possible_frontruns, &possible_backrun, &victims, swap_info) {
         return None;
     }
-    let frontrun = SwapDto::from(swap_info.get(&possible_frontruns[0]).cloned()?);
-    let backrun = SwapDto::from(swap_info.get(&possible_backrun).cloned()?);
+    let frontrun = SwapInfo::from(swap_info.get(&possible_frontruns[0]).cloned()?);
+    let backrun = SwapInfo::from(swap_info.get(&possible_backrun).cloned()?);
     let victim_swaps = victims[0]
         .iter()
         .filter_map(|v| swap_info.get(v).cloned())
-        .map(|v| SwapDto::from(v))
+        .map(SwapInfo::from)
         .collect();
 
     //check if profitable
@@ -60,8 +76,8 @@ fn calculate_sandwich(
 
     //this possible sandwich is a sandwich
     Some(vec![Sandwich {
-        frontrun: SwapDto::from(frontrun.clone()),
-        backrun: SwapDto::from(backrun.clone()),
+        frontrun: vec![frontrun.clone()],
+        backrun: vec![backrun.clone()],
         victim_swaps,
     }])
 }
@@ -72,12 +88,13 @@ fn has_pool_overlap(
     frontrun_txs: &[String],
     backrun_tx: &String,
     victims_txs: &[Vec<String>],
-    swap_info: &HashMap<String, TradeData>,
+    swap_info: &SwapInfoStore,
 ) -> bool {
     let frontrun_swaps = frontrun_txs
         .iter()
         .filter_map(|fr| swap_info.get(fr))
         .collect::<Vec<_>>();
+
     if frontrun_swaps.is_empty() {
         return false;
     }
@@ -97,28 +114,29 @@ fn has_pool_overlap(
     }
     false
 }
-fn has_reverse_swap_direction(swap1: &TradeData, swap2: &TradeData) -> bool {
-    let same_pool = swap1.pool_address.eq(&swap2.pool_address);
-    let is_reverse_direction = (swap1.base_amount * swap2.quote_amount).is_sign_positive();
+fn has_reverse_swap_direction(swap1: &NormalizedSwap, swap2: &NormalizedSwap) -> bool {
+    let same_pool = swap1.inner.pool_address.eq(&swap2.inner.pool_address);
+    let is_reverse_direction =
+        (swap1.inner.base_amount * swap2.inner.quote_amount).is_sign_positive();
     if same_pool && is_reverse_direction {
         return true;
     }
     false
 }
-fn has_same_swap_direction(swap1: &TradeData, swap2: &TradeData) -> bool {
-    let same_pool = swap1.pool_address.eq(&swap2.pool_address);
-    let same_direction = (swap1.base_amount * swap2.base_amount).is_sign_positive();
+fn has_same_swap_direction(swap1: &NormalizedSwap, swap2: &NormalizedSwap) -> bool {
+    let same_pool = swap1.inner.pool_address.eq(&swap2.inner.pool_address);
+    let same_direction = (swap1.inner.base_amount * swap2.inner.base_amount).is_sign_positive();
     if same_pool && same_direction {
         return true;
     }
     false
 }
 fn verify_sandwich_victims(
-    victims: &Vec<TradeData>,
-    frontrun: &TradeData,
-    backrun: &TradeData,
+    victims: &[NormalizedSwap],
+    frontrun: &NormalizedSwap,
+    _backrun: &NormalizedSwap,
 ) -> bool {
-    let total = victims.iter().count();
+    let total = victims.len();
     let confirmed_victims = victims
         .iter()
         .filter(|v| has_same_swap_direction(frontrun, v))
@@ -189,46 +207,46 @@ fn get_possible_sandwich_duplicate_senders(trades: Vec<NormalizedSwap>) -> Vec<P
     let mut possible_sandwiches: HashMap<String, PossibleSandwich> = HashMap::default();
 
     for trade in trades {
-        let curr_tx = trade.id.clone();
-        match duplicate_senders.entry(trade.data.signer.clone()) {
+        let curr_tx = trade.multi_location.clone();
+        match duplicate_senders.entry(trade.inner.signer.clone()) {
             Entry::Vacant(e) => {
-                e.insert(trade.id.clone());
+                e.insert(trade.multi_location.clone());
                 // add as first possible frontrun, no victims for this
                 possible_victims.insert(curr_tx.clone(), vec![]);
             }
             Entry::Occupied(mut e) => {
                 //duplicated entry,
-                let prev_tx_hash = e.insert(trade.id.clone());
+                let prev_tx_hash = e.insert(trade.multi_location.clone());
                 // get possible victims of prev transctions (all txs than occur between current and prev_tx_hash)
                 if let Some(front_run_victims) = possible_victims.remove(&prev_tx_hash) {
                     match possible_sandwiches.entry(prev_tx_hash.clone()) {
                         Entry::Vacant(s) => {
                             //first time we are facing a duplicate, create brand new sandwich
                             s.insert(PossibleSandwich {
-                                eoa: trade.data.signer,
+                                eoa: trade.inner.signer,
                                 possible_frontruns: vec![prev_tx_hash],
-                                possible_backrun: trade.id.clone(),
+                                possible_backrun: trade.multi_location.clone(),
                                 victims: vec![front_run_victims],
                             });
                         }
                         Entry::Occupied(mut s) => {
                             let sandwich = s.get_mut();
                             sandwich.possible_frontruns.push(prev_tx_hash);
-                            sandwich.possible_backrun = trade.id.clone();
+                            sandwich.possible_backrun = trade.multi_location.clone();
                             sandwich.victims.push(front_run_victims);
                         }
                     }
                 }
                 // Add current transaction hash to the list of transactions for this sender
-                e.insert(trade.id.clone());
-                possible_victims.insert(trade.id.clone(), vec![]);
+                e.insert(trade.multi_location.clone());
+                possible_victims.insert(trade.multi_location.clone(), vec![]);
             }
         }
 
         //assume this current transaction a victim of all prev transactions
         for (k, v) in possible_victims.iter_mut() {
             if k != &curr_tx {
-                v.push(trade.id.clone());
+                v.push(trade.multi_location.clone());
             }
         }
     }

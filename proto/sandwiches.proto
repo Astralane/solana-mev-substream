@@ -6,12 +6,12 @@ message SandwichOutput {
     repeated Sandwich data = 1;
 }
 message Sandwich {
-    required SwapDto frontrun = 1;
-    repeated SwapDto victim_swaps = 2;
-    required SwapDto backrun = 3;
+    repeated SwapInfo frontrun = 1;
+    repeated SwapInfo victim_swaps = 2;
+    repeated SwapInfo backrun = 3;
 }
 
-message SwapDto {
+message SwapInfo {
     required uint64 block_slot = 1;
     required string tx_id = 2;
     required string signer = 3;
@@ -21,5 +21,12 @@ message SwapDto {
     required double amount_in = 7;
     required double amount_out = 8;
     required uint64 txn_fee = 9;
-    required string multilocation = 10;
+    required string multi_location = 10;
+    required uint32 instruction_index = 11;
+    required bool is_inner_instruction = 12;
+    required uint32 inner_instruction_index = 13;
+    required uint32 transaction_index = 14;
+    required uint64 fee = 15;
+    required string inner_program = 16;
+    required string outer_program = 17;
 }

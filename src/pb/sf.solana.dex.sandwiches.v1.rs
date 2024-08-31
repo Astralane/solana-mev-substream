@@ -8,16 +8,16 @@ pub struct SandwichOutput {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Sandwich {
-    #[prost(message, required, tag="1")]
-    pub frontrun: SwapDto,
+    #[prost(message, repeated, tag="1")]
+    pub frontrun: ::prost::alloc::vec::Vec<SwapInfo>,
     #[prost(message, repeated, tag="2")]
-    pub victim_swaps: ::prost::alloc::vec::Vec<SwapDto>,
-    #[prost(message, required, tag="3")]
-    pub backrun: SwapDto,
+    pub victim_swaps: ::prost::alloc::vec::Vec<SwapInfo>,
+    #[prost(message, repeated, tag="3")]
+    pub backrun: ::prost::alloc::vec::Vec<SwapInfo>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct SwapDto {
+pub struct SwapInfo {
     #[prost(uint64, required, tag="1")]
     pub block_slot: u64,
     #[prost(string, required, tag="2")]
@@ -37,6 +37,20 @@ pub struct SwapDto {
     #[prost(uint64, required, tag="9")]
     pub txn_fee: u64,
     #[prost(string, required, tag="10")]
-    pub multilocation: ::prost::alloc::string::String,
+    pub multi_location: ::prost::alloc::string::String,
+    #[prost(uint32, required, tag="11")]
+    pub instruction_index: u32,
+    #[prost(bool, required, tag="12")]
+    pub is_inner_instruction: bool,
+    #[prost(uint32, required, tag="13")]
+    pub inner_instruction_index: u32,
+    #[prost(uint32, required, tag="14")]
+    pub transaction_index: u32,
+    #[prost(uint64, required, tag="15")]
+    pub fee: u64,
+    #[prost(string, required, tag="16")]
+    pub inner_program: ::prost::alloc::string::String,
+    #[prost(string, required, tag="17")]
+    pub outer_program: ::prost::alloc::string::String,
 }
 // @@protoc_insertion_point(module)

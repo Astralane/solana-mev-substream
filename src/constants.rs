@@ -1,6 +1,6 @@
 pub const SYSTEM_PROGRAM_ADDRESS: &str = "11111111111111111111111111111111";
 
-pub const JITO_TIPS: [&'static str; 8] = [
+pub const JITO_TIPS: [&str; 8] = [
     "96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5",
     "HFqU5x63VTqvQss8hp11i4wVV8bD44PvwucfZ2bU7gRe",
     "Cw8CFyM9FkoMi7K7Crf6HNQqf4uEMzpKw6QNghXLvLkY",
