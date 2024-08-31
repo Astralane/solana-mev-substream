@@ -56,7 +56,7 @@ impl From<NormalizedSwap> for SwapInfo {
             token_out,
             amount_in,
             amount_out,
-            txn_fee: value.inner.txn_fee,
+            tx_fee: value.inner.txn_fee,
             inner_program: value.inner.inner_program,
             outer_program: value.inner.outer_program,
         }

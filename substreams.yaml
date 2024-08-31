@@ -1,7 +1,7 @@
 specVersion: v0.1.0
 package:
   name: 'solana_mev_substream'
-  version: v1.0.0
+  version: v1.0.1
 
 protobuf:
   files:

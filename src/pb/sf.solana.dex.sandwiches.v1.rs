@@ -35,7 +35,7 @@ pub struct SwapInfo {
     #[prost(double, required, tag="8")]
     pub amount_out: f64,
     #[prost(uint64, required, tag="9")]
-    pub txn_fee: u64,
+    pub tx_fee: u64,
     #[prost(string, required, tag="10")]
     pub multi_location: ::prost::alloc::string::String,
     #[prost(uint32, required, tag="11")]

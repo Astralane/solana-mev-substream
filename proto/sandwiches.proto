@@ -20,7 +20,7 @@ message SwapInfo {
     required string token_out = 6;
     required double amount_in = 7;
     required double amount_out = 8;
-    required uint64 txn_fee = 9;
+    required uint64 tx_fee = 9;
     required string multi_location = 10;
     required uint32 instruction_index = 11;
     required bool is_inner_instruction = 12;
