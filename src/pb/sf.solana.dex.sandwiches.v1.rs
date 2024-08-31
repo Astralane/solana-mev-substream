@@ -46,11 +46,9 @@ pub struct SwapInfo {
     pub inner_instruction_index: u32,
     #[prost(uint32, required, tag="14")]
     pub transaction_index: u32,
-    #[prost(uint64, required, tag="15")]
-    pub fee: u64,
-    #[prost(string, required, tag="16")]
+    #[prost(string, required, tag="15")]
     pub inner_program: ::prost::alloc::string::String,
-    #[prost(string, required, tag="17")]
+    #[prost(string, required, tag="16")]
     pub outer_program: ::prost::alloc::string::String,
 }
 // @@protoc_insertion_point(module)

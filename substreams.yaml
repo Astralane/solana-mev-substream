@@ -40,6 +40,7 @@ modules:
     kind: map
     inputs:
       - map: dex_trades:map_block
+      - source: sf.solana.type.v1.Block
     output:
       type: proto:sf.solana.dex.sandwiches.v1.SandwichOutput
 

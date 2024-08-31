@@ -48,7 +48,6 @@ impl From<NormalizedSwap> for SwapInfo {
             is_inner_instruction: value.inner.is_inner_instruction,
             inner_instruction_index: value.inner.instruction_index,
             transaction_index: value.tx_index,
-            fee: value.inner.txn_fee,
             block_slot: value.inner.block_slot,
             tx_id: value.inner.tx_id,
             signer: value.inner.signer,

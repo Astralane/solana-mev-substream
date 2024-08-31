@@ -44,6 +44,7 @@ pub fn map_transfers(block: Block) -> Option<Vec<SystemTransfer>> {
                     to: info.to,
                     lamports: info.lamports,
                     transaction_index: tx_idx as u32,
+                    tx_fee: meta.fee,
                 };
                 transfers.push(st)
             }
@@ -74,6 +75,7 @@ pub fn map_transfers(block: Block) -> Option<Vec<SystemTransfer>> {
                                     to: info.to,
                                     lamports: info.lamports,
                                     transaction_index: tx_idx as u32,
+                                    tx_fee: meta.fee,
                                 };
                                 transfers.push(st)
                             }

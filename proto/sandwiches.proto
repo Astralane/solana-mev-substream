@@ -26,7 +26,6 @@ message SwapInfo {
     required bool is_inner_instruction = 12;
     required uint32 inner_instruction_index = 13;
     required uint32 transaction_index = 14;
-    required uint64 fee = 15;
-    required string inner_program = 16;
-    required string outer_program = 17;
+    required string inner_program = 15;
+    required string outer_program = 16;
 }
