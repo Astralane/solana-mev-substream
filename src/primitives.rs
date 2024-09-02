@@ -1,5 +1,7 @@
 use crate::pb::sf::solana::dex::sandwiches::v1::SwapInfo;
 use crate::pb::sf::solana::dex::trades::v1::TradeData;
+use crate::pb::sf::solana::transaction::info::v1::TransactionDetails;
+use borsh::BorshDeserialize;
 use std::collections::HashMap;
 
 #[derive(Clone)]
@@ -62,15 +64,15 @@ impl From<NormalizedSwap> for SwapInfo {
         }
     }
 }
-impl From<(u32, TradeData)> for NormalizedSwap {
-    fn from(value: (u32, TradeData)) -> Self {
+impl From<(TransactionDetails, TradeData)> for NormalizedSwap {
+    fn from(value: (TransactionDetails, TradeData)) -> Self {
         let multi_location = format!(
             "{}/{}/{}",
             value.1.tx_id, value.1.instruction_index, value.1.inner_instruxtion_index
         );
         NormalizedSwap {
             multi_location,
-            tx_index: value.0,
+            tx_index: value.0.transaction_index,
             inner: value.1,
         }
     }
@@ -84,4 +86,21 @@ pub struct PossibleSandwich {
     // Mapping of possible frontruns to the set of possible victims.
     // By definition the victims of latter transactions can also be victims of the former
     pub victims: Vec<Vec<String>>,
+}
+
+#[derive(Clone, Debug, BorshDeserialize)]
+pub enum ComputeBudgetInstruction {
+    Unused, // deprecated variant, reserved value.
+    /// Request a specific transaction-wide program heap region size in bytes.
+    /// The value requested must be a multiple of 1024. This new heap region
+    /// size applies to each program executed in the transaction, including all
+    /// calls to CPIs.
+    RequestHeapFrame(u32),
+    /// Set a specific compute unit limit that the transaction is allowed to consume.
+    SetComputeUnitLimit(u32),
+    /// Set a compute unit price in "micro-lamports" to pay a higher transaction
+    /// fee for higher transaction prioritization.
+    SetComputeUnitPrice(u64),
+    /// Set a specific transaction-wide account data size limit, in bytes, is allowed to load.
+    SetLoadedAccountsDataSizeLimit(u32),
 }

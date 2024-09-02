@@ -8,6 +8,7 @@ protobuf:
     - block_meta.proto
     - sandwiches.proto
     - system_transfers.proto
+    - transaction_info.proto
   importPaths:
     - ./proto
 
@@ -22,6 +23,13 @@ binaries:
     file: target/wasm32-unknown-unknown/release/substreams.wasm
 
 modules:
+  - name: map_transaction_info
+    kind: map
+    inputs:
+      - source: sf.solana.type.v1.Block
+    output:
+        type: proto:sf.transaction.info.v1.TransactionInfoOutput
+
   - name: map_system_transfers
     kind: map
     inputs:
@@ -29,7 +37,7 @@ modules:
     output:
       type: proto:sf.solana.transfer.v1.TransferOutput
 
-  - name: map_jito_tips
+  - name: map_tips
     kind: map
     inputs:
       - map: map_system_transfers
@@ -40,7 +48,7 @@ modules:
     kind: map
     inputs:
       - map: dex_trades:map_block
-      - source: sf.solana.type.v1.Block
+      - map: map_transaction_info
     output:
       type: proto:sf.solana.dex.sandwiches.v1.SandwichOutput
 

@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package sf.solana.transaction.info.v1;
+
+message TransactionInfoStore {
+    map<string, TransactionDetails> store = 1;
+}
+
+message TransactionDetails {
+    uint64 slot = 1;
+    string tx_id = 2;
+    uint32 transaction_index = 3;
+    string signer = 4;
+    uint64 tx_fee = 5;
+    uint64 priority_fee = 6;
+}

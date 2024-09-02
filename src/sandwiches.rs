@@ -1,26 +1,25 @@
 use crate::pb::sf::solana::dex::sandwiches::v1::{Sandwich, SwapInfo};
 use crate::pb::sf::solana::dex::trades::v1::TradeData;
+use crate::pb::sf::solana::transaction::info::v1::TransactionInfoStore;
 use crate::primitives::{NormalizedSwap, PossibleSandwich, SwapInfoStore};
 use itertools::Itertools;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
-use substreams_solana::pb::sf::solana::r#type::v1::Block;
 
-pub fn map_sandwiches(trades: Vec<TradeData>, block: Block) -> Vec<Sandwich> {
-    //create a map of tx_id to index
-    let mut tx_index_store = HashMap::new();
-    for (idx, transaction) in block.transactions.into_iter().enumerate() {
-        if let Some(tx) = transaction.transaction {
-            tx_index_store.insert(bs58::encode(&tx.signatures[0]).into_string(), idx as u32);
-        }
-    }
-
+pub fn map_sandwiches(
+    trades: Vec<TradeData>,
+    transaction_info: TransactionInfoStore,
+) -> Vec<Sandwich> {
     //convert trades to NormalizedSwap form
     let swaps = trades
         .clone()
         .into_iter()
         .map(|s| {
-            let tx_idx = tx_index_store.get(&s.tx_id).cloned().unwrap_or_default();
+            let tx_idx = transaction_info
+                .store
+                .get(&s.tx_id)
+                .cloned()
+                .unwrap_or_default();
             NormalizedSwap::from((tx_idx, s))
         })
         .collect::<Vec<_>>();
