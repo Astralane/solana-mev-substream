@@ -1,9 +1,13 @@
 syntax = "proto3";
 
-package sf.solana.transaction.info.v1;
+package sf.solana.transaction.details.v1;
 
-message TransactionInfoStore {
-    map<string, TransactionDetails> store = 1;
+message TransactionDetailsStore {
+    map<string, TransactionDetails> data = 1;
+}
+
+message TransactionDetailsOutput {
+    repeated TransactionDetails data = 1;
 }
 
 message TransactionDetails {

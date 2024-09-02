@@ -1,6 +1,6 @@
 use crate::pb::sf::solana::dex::sandwiches::v1::SwapInfo;
 use crate::pb::sf::solana::dex::trades::v1::TradeData;
-use crate::pb::sf::solana::transaction::info::v1::TransactionDetails;
+use crate::pb::sf::solana::transaction::details::v1::TransactionDetails;
 use borsh::BorshDeserialize;
 use std::collections::HashMap;
 

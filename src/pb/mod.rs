@@ -25,11 +25,11 @@ pub mod sf {
             }
         }
         pub mod transaction {
-            pub mod info {
-                // @@protoc_insertion_point(attribute:sf.solana.transaction.info.v1)
+            pub mod details {
+                // @@protoc_insertion_point(attribute:sf.solana.transaction.details.v1)
                 pub mod v1 {
-                    include!("sf.solana.transaction.info.v1.rs");
-                    // @@protoc_insertion_point(sf.solana.transaction.info.v1)
+                    include!("sf.solana.transaction.details.v1.rs");
+                    // @@protoc_insertion_point(sf.solana.transaction.details.v1)
                 }
             }
         }

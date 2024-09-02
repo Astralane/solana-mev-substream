@@ -3,17 +3,14 @@ use crate::constants::{
     MICRO_LAMPORTS_PER_LAMPORT,
 };
 use crate::error::MevSubstreamError;
-use crate::pb::sf::solana::transaction::info::v1::TransactionDetails;
+use crate::pb::sf::solana::transaction::details::v1::TransactionDetails;
 use crate::primitives::ComputeBudgetInstruction;
 use borsh::BorshDeserialize;
-use std::collections::HashMap;
 use substreams_solana::pb::sf::solana::r#type::v1::Block;
 
-pub fn get_transaction_info(
-    block: Block,
-) -> Result<HashMap<String, TransactionDetails>, MevSubstreamError> {
+pub fn get_transaction_details(block: Block) -> Result<Vec<TransactionDetails>, MevSubstreamError> {
     //create a map of tx_id to details
-    let mut tx_index_store = HashMap::new();
+    let mut tx_details = Vec::new();
     for (idx, confirmed_transaction) in block.transactions.into_iter().enumerate() {
         let accounts = confirmed_transaction.resolved_accounts_as_strings();
 
@@ -46,34 +43,29 @@ pub fn get_transaction_info(
                     Err(e) => {
                         return Err(MevSubstreamError::IoError(e));
                     }
-                    _ => {
-                        return Err(MevSubstreamError::DecodeInstructionError(idx as u32));
-                    }
+                    _ => { /*instruction not useful for our case */ }
                 }
             } else {
                 non_compute_instructions += 1;
             }
         }
 
-        tx_index_store.insert(
-            tx_id,
-            TransactionDetails {
-                slot: block.slot,
-                tx_id: bs58::encode(&transaction.signatures[0]).into_string(),
-                transaction_index: idx as u32,
-                signer: "".to_string(),
-                tx_fee: meta.fee,
-                priority_fee: compute_priority_fee(
-                    compute_unit_price.unwrap_or(0),
-                    compute_units.unwrap_or(
-                        non_compute_instructions
-                            .saturating_mul(DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT.into()),
-                    ),
+        tx_details.push(TransactionDetails {
+            slot: block.slot,
+            tx_id: bs58::encode(&transaction.signatures[0]).into_string(),
+            transaction_index: idx as u32,
+            signer: "".to_string(),
+            tx_fee: meta.fee,
+            priority_fee: compute_priority_fee(
+                compute_unit_price.unwrap_or(0),
+                compute_units.unwrap_or(
+                    non_compute_instructions
+                        .saturating_mul(DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT.into()),
                 ),
-            },
-        );
+            ),
+        });
     }
-    Ok(tx_index_store)
+    Ok(tx_details)
 }
 pub fn compute_priority_fee(compute_unit_price: u64, compute_unit_limit: u32) -> u64 {
     let micro_lamport_fee = (compute_unit_price as u128).saturating_mul(compute_unit_limit as u128);

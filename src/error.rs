@@ -3,6 +3,6 @@ use thiserror::Error;
 
 #[derive(Error, Debug, Display)]
 pub enum MevSubstreamError {
-    DecodeInstructionError(u32),
+    DecodeInstructionError(String),
     IoError(#[from] std::io::Error),
 }

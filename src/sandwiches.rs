@@ -1,6 +1,6 @@
 use crate::pb::sf::solana::dex::sandwiches::v1::{Sandwich, SwapInfo};
 use crate::pb::sf::solana::dex::trades::v1::TradeData;
-use crate::pb::sf::solana::transaction::info::v1::TransactionInfoStore;
+use crate::pb::sf::solana::transaction::details::v1::TransactionDetailsStore;
 use crate::primitives::{NormalizedSwap, PossibleSandwich, SwapInfoStore};
 use itertools::Itertools;
 use std::collections::hash_map::Entry;
@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 pub fn map_sandwiches(
     trades: Vec<TradeData>,
-    transaction_info: TransactionInfoStore,
+    transaction_info: TransactionDetailsStore,
 ) -> Vec<Sandwich> {
     //convert trades to NormalizedSwap form
     let swaps = trades
@@ -16,7 +16,7 @@ pub fn map_sandwiches(
         .into_iter()
         .map(|s| {
             let tx_idx = transaction_info
-                .store
+                .data
                 .get(&s.tx_id)
                 .cloned()
                 .unwrap_or_default();

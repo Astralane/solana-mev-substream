@@ -1,9 +1,15 @@
 // @generated
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct TransactionInfoStore {
+pub struct TransactionDetailsStore {
     #[prost(map="string, message", tag="1")]
-    pub store: ::std::collections::HashMap<::prost::alloc::string::String, TransactionDetails>,
+    pub data: ::std::collections::HashMap<::prost::alloc::string::String, TransactionDetails>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TransactionDetailsOutput {
+    #[prost(message, repeated, tag="1")]
+    pub data: ::prost::alloc::vec::Vec<TransactionDetails>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
