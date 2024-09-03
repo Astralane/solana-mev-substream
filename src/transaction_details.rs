@@ -52,9 +52,9 @@ pub fn get_transaction_details(block: Block) -> Result<Vec<TransactionDetails>, 
 
         tx_details.push(TransactionDetails {
             slot: block.slot,
-            tx_id: bs58::encode(&transaction.signatures[0]).into_string(),
+            tx_id,
             transaction_index: idx as u32,
-            signer: "".to_string(),
+            signer: accounts[0].clone(),
             tx_fee: meta.fee,
             priority_fee: compute_priority_fee(
                 compute_unit_price.unwrap_or(0),

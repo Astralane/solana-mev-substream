@@ -7,7 +7,7 @@ mod system_transfers;
 mod transaction_details;
 
 use crate::constants::JITO_TIPS;
-use crate::pb::sf::solana::dex::sandwiches::v1::SandwichOutput;
+use crate::pb::sf::solana::dex::sandwiches::v1::{NormalizedSwap, SandwichOutput, SwapsOutput};
 use crate::pb::sf::solana::dex::trades::v1::Output;
 use crate::pb::sf::solana::transaction::details::v1::{
     TransactionDetailsOutput, TransactionDetailsStore,
@@ -32,24 +32,6 @@ fn map_system_transfers(block: Block) -> Result<TransferOutput, substreams::erro
 }
 
 #[substreams::handlers::map]
-fn map_transaction_details_store(
-    block: Block,
-) -> Result<TransactionDetailsStore, substreams::errors::Error> {
-    //create a map of tx_id to details
-    let maybe_data = get_transaction_details(block);
-    match maybe_data {
-        Ok(details) => {
-            let data = details.into_iter().map(|d| (d.tx_id.clone(), d)).collect();
-            Ok(TransactionDetailsStore { data })
-        }
-        Err(e) => {
-            //substreams::log::println(format!("Error: {:?}", e));
-            return Err(substreams::errors::Error::from(e));
-        }
-    }
-}
-
-#[substreams::handlers::map]
 fn map_transaction_details(
     block: Block,
 ) -> Result<TransactionDetailsOutput, substreams::errors::Error> {
@@ -57,6 +39,19 @@ fn map_transaction_details(
     Ok(TransactionDetailsOutput {
         data: get_transaction_details(block)?,
     })
+}
+
+#[substreams::handlers::map]
+fn map_transaction_details_store(
+    block: TransactionDetailsOutput,
+) -> Result<TransactionDetailsStore, substreams::errors::Error> {
+    //create a map of tx_id to details
+    let map = block
+        .data
+        .into_iter()
+        .map(|d| (d.tx_id.clone(), d))
+        .collect();
+    Ok(TransactionDetailsStore { data: map })
 }
 
 #[substreams::handlers::map]
@@ -73,7 +68,31 @@ fn map_tips(out: TransferOutput) -> Result<TransferOutput, substreams::errors::E
 fn map_trades(
     dex_trades: Output,
     transaction_info: TransactionDetailsStore,
+) -> Result<SwapsOutput, substreams::errors::Error> {
+    let swaps = dex_trades
+        .data
+        .into_iter()
+        .map(|item| {
+            let priority_fee = transaction_info
+                .data
+                .get(&item.tx_id)
+                .map(|d| d.priority_fee)
+                .unwrap_or(0);
+            let transaction_index = transaction_info
+                .data
+                .get(&item.tx_id)
+                .map(|d| d.transaction_index)
+                .unwrap_or(0);
+            NormalizedSwap::from_trade(item, priority_fee, transaction_index)
+        })
+        .collect::<Vec<_>>();
+    Ok(SwapsOutput { data: swaps })
+}
+
+#[substreams::handlers::map]
+fn map_to_sandwiches(
+    swaps_output: SwapsOutput,
 ) -> Result<SandwichOutput, substreams::errors::Error> {
-    let sandwiches = map_sandwiches(dex_trades.data, transaction_info);
+    let sandwiches = map_sandwiches(swaps_output.data);
     Ok(SandwichOutput { data: sandwiches })
 }

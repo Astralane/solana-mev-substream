@@ -1,11 +1,17 @@
 use crate::constants::SYSTEM_PROGRAM_ADDRESS;
 use crate::pb::sf::solana::transfer::v1::SystemTransfer;
-use crate::primitives::TransferInfo;
 use borsh::BorshDeserialize;
 use substreams_solana::pb::sf::solana::r#type::v1::Block;
 
 #[derive(Debug, BorshDeserialize)]
 pub struct TransferLayout {
+    pub lamports: u64,
+}
+
+#[derive(Clone)]
+pub struct TransferInfo {
+    pub from: String,
+    pub to: String,
     pub lamports: u64,
 }
 
