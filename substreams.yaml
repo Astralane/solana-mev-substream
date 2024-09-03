@@ -57,7 +57,7 @@ modules:
       - map: dex_trades:map_block
       - map: map_transaction_details_store
     output:
-      type: proto:sf.solana.dex.sandwiches.v1.SwapOutput
+      type: proto:sf.solana.dex.sandwiches.v1.SwapsOutput
 
   - name: map_to_sandwiches
     kind: map

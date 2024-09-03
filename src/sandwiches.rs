@@ -14,7 +14,7 @@ pub fn map_sandwiches(swaps: Vec<NormalizedSwap>) -> Vec<Sandwich> {
 
     //get possible sandwiches
     let sandwiches = get_possible_sandwiches(swaps);
-
+    substreams::log::println(format!("Possible sandwiches: {:?}", sandwiches));
     //map possible sandwiches to sandwich data
     sandwiches
         .into_iter()
@@ -185,16 +185,16 @@ fn get_possible_sandwich_duplicate_senders(trades: Vec<NormalizedSwap>) -> Vec<P
     let mut possible_sandwiches: HashMap<String, PossibleSandwich> = HashMap::default();
 
     for trade in trades {
-        let curr_tx = trade.multi_location.clone();
+        let curr_tx = trade.tx_id.clone();
         match duplicate_senders.entry(trade.signer.clone()) {
             Entry::Vacant(e) => {
-                e.insert(trade.multi_location.clone());
+                e.insert(trade.tx_id.clone());
                 // add as first possible frontrun, no victims for this
                 possible_victims.insert(curr_tx.clone(), vec![]);
             }
             Entry::Occupied(mut e) => {
                 //duplicated entry,
-                let prev_tx_hash = e.insert(trade.multi_location.clone());
+                let prev_tx_hash = e.insert(trade.tx_id.clone());
                 // get possible victims of prev transctions (all txs than occur between current and prev_tx_hash)
                 if let Some(front_run_victims) = possible_victims.remove(&prev_tx_hash) {
                     match possible_sandwiches.entry(prev_tx_hash.clone()) {
@@ -203,28 +203,28 @@ fn get_possible_sandwich_duplicate_senders(trades: Vec<NormalizedSwap>) -> Vec<P
                             s.insert(PossibleSandwich {
                                 eoa: trade.signer,
                                 possible_frontruns: vec![prev_tx_hash],
-                                possible_backrun: trade.multi_location.clone(),
+                                possible_backrun: trade.tx_id.clone(),
                                 victims: vec![front_run_victims],
                             });
                         }
                         Entry::Occupied(mut s) => {
                             let sandwich = s.get_mut();
                             sandwich.possible_frontruns.push(prev_tx_hash);
-                            sandwich.possible_backrun = trade.multi_location.clone();
+                            sandwich.possible_backrun = trade.tx_id.clone();
                             sandwich.victims.push(front_run_victims);
                         }
                     }
                 }
                 // Add current transaction hash to the list of transactions for this sender
-                e.insert(trade.multi_location.clone());
-                possible_victims.insert(trade.multi_location.clone(), vec![]);
+                e.insert(trade.tx_id.clone());
+                possible_victims.insert(trade.tx_id.clone(), vec![]);
             }
         }
 
         //assume this current transaction a victim of all prev transactions
         for (k, v) in possible_victims.iter_mut() {
             if k != &curr_tx {
-                v.push(trade.multi_location.clone());
+                v.push(trade.tx_id.clone());
             }
         }
     }
