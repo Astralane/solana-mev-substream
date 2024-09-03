@@ -33,20 +33,12 @@ fn map_system_transfers(block: Block) -> Result<TransferOutput, substreams::erro
 
 #[substreams::handlers::map]
 fn map_transaction_details_store(
-    block: Block,
+    tx: TransactionDetailsOutput,
 ) -> Result<TransactionDetailsStore, substreams::errors::Error> {
     //create a map of tx_id to details
-    let maybe_data = get_transaction_details(block);
-    match maybe_data {
-        Ok(details) => {
-            let data = details.into_iter().map(|d| (d.tx_id.clone(), d)).collect();
-            Ok(TransactionDetailsStore { data })
-        }
-        Err(e) => {
-            //substreams::log::println(format!("Error: {:?}", e));
-            return Err(substreams::errors::Error::from(e));
-        }
-    }
+    Ok(TransactionDetailsStore {
+        data: tx.data.into_iter().map(|d| (d.tx_id.clone(), d)).collect(),
+    })
 }
 
 #[substreams::handlers::map]
