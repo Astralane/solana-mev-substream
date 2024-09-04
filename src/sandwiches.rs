@@ -14,7 +14,7 @@ pub fn map_sandwiches(swaps: Vec<NormalizedSwap>) -> Vec<Sandwich> {
 
     //get possible sandwiches
     let sandwiches = get_possible_sandwiches(swaps);
-    substreams::log::println(format!("Possible sandwiches: {:?}", sandwiches));
+    //substreams::log::println(format!("Possible sandwiches: {:?}", sandwiches));
     //map possible sandwiches to sandwich data
     sandwiches
         .into_iter()

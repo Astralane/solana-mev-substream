@@ -1,6 +1,6 @@
 use crate::pb::sf::solana::dex::sandwiches::v1::NormalizedSwap;
 use crate::pb::sf::solana::dex::trades::v1::TradeData;
-use borsh::BorshDeserialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 impl NormalizedSwap {
     pub fn from_trade(value: TradeData, priority_fee: u64, tx_index: u32) -> Self {
@@ -56,7 +56,7 @@ pub struct PossibleSandwich {
     pub victims: Vec<Vec<String>>,
 }
 
-#[derive(Clone, Debug, BorshDeserialize)]
+#[derive(Clone, Debug, BorshDeserialize, BorshSerialize)]
 pub enum ComputeBudgetInstruction {
     Unused, // deprecated variant, reserved value.
     /// Request a specific transaction-wide program heap region size in bytes.
