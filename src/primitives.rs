@@ -20,11 +20,6 @@ impl NormalizedSwap {
                 value.quote_amount.abs(),
             )
         };
-
-        // substreams::log::println(format!(
-        //     "token_in: {}, token_out: {}, amount_in: {}, amount_out: {}, tx:{}",
-        //     token_in, token_out, amount_in, amount_out, value.tx_id
-        // ));
         NormalizedSwap {
             block_date: value.block_date,
             multi_location: format!(
