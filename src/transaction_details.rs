@@ -30,20 +30,24 @@ pub fn get_transaction_details(block: Block) -> Result<Vec<TransactionDetails>, 
         let Some(message) = transaction.message else {
             continue;
         };
-        for ix in message.instructions.iter() {
+        for (ix_index, ix) in message.instructions.iter().enumerate() {
             if accounts[ix.program_id_index as usize] == COMPUTE_BUDGET_PROGRAM_ADDRESS {
-                let decoded = ComputeBudgetInstruction::try_from_slice(&ix.data);
-                match decoded {
-                    Ok(ComputeBudgetInstruction::SetComputeUnitLimit(limit)) => {
+                //discriminator type u8
+                let (discriminator, rest) = ix.data.split_at(1);
+                match discriminator[0] {
+                    2 => {
+                        //set limit decode u32
+                        let value:[u8; 4] = rest[..4].try_into().expect("value is not 4 bytes");
+                        let limit = u32::from_le_bytes(value);
                         compute_units = Some(limit);
                     }
-                    Ok(ComputeBudgetInstruction::SetComputeUnitPrice(price)) => {
+                    3 => {
+                        //set price decode u64
+                        let value:[u8; 8] = rest[..8].try_into().expect("value is not 8 bytes");
+                        let price = u64::from_le_bytes(value);
                         compute_unit_price = Some(price);
                     }
-                    Err(e) => {
-                        return Err(MevSubstreamError::IoError(e));
-                    }
-                    _ => { /*instruction not useful for our case */ }
+                    _ => { /*do nothing*/ }
                 }
             } else {
                 non_compute_instructions += 1;
@@ -52,9 +56,9 @@ pub fn get_transaction_details(block: Block) -> Result<Vec<TransactionDetails>, 
 
         tx_details.push(TransactionDetails {
             slot: block.slot,
-            tx_id: bs58::encode(&transaction.signatures[0]).into_string(),
+            tx_id,
             transaction_index: idx as u32,
-            signer: "".to_string(),
+            signer: accounts[0].clone(),
             tx_fee: meta.fee,
             priority_fee: compute_priority_fee(
                 compute_unit_price.unwrap_or(0),
@@ -74,4 +78,18 @@ pub fn compute_priority_fee(compute_unit_price: u64, compute_unit_limit: u32) ->
         .checked_div(MICRO_LAMPORTS_PER_LAMPORT as u128)
         .and_then(|fee| u64::try_from(fee).ok())
         .unwrap_or(u64::MAX)
+}
+
+#[cfg(test)]
+mod test {
+    use borsh::BorshDeserialize;
+    use crate::primitives::ComputeBudgetInstruction;
+
+    #[test]
+    fn test_compute_budget_decoder() {
+        let ix = "6LRurBWDYzjLoUbGDs1HPLVCuuLVSe8xqYo";
+        let vec_u8 = bs58::decode(ix).into_vec().unwrap();
+        let decoded = ComputeBudgetInstruction::try_from_slice(&vec_u8);
+        assert!(decoded.is_ok());
+    }
 }

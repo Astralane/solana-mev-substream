@@ -1,11 +1,17 @@
 use crate::constants::SYSTEM_PROGRAM_ADDRESS;
 use crate::pb::sf::solana::transfer::v1::SystemTransfer;
-use crate::primitives::TransferInfo;
 use borsh::BorshDeserialize;
 use substreams_solana::pb::sf::solana::r#type::v1::Block;
 
 #[derive(Debug, BorshDeserialize)]
 pub struct TransferLayout {
+    pub lamports: u64,
+}
+
+#[derive(Clone)]
+pub struct TransferInfo {
+    pub from: String,
+    pub to: String,
     pub lamports: u64,
 }
 
@@ -93,6 +99,7 @@ pub fn parse_system_instruction(
     account_indices: &[u8],
     accounts: &[String],
 ) -> Option<TransferInfo> {
+    //discriminator type = u32
     let (disc_bytes, rest) = instruction_data.split_at(4);
     //ref: https://docs.rs/solana-program/latest/solana_program/system_instruction/enum.SystemInstruction.html
     match disc_bytes[0] {

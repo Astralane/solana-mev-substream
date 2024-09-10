@@ -9,15 +9,21 @@ pub struct SandwichOutput {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Sandwich {
     #[prost(message, repeated, tag="1")]
-    pub frontrun: ::prost::alloc::vec::Vec<SwapInfo>,
+    pub frontrun: ::prost::alloc::vec::Vec<NormalizedSwap>,
     #[prost(message, repeated, tag="2")]
-    pub victim_swaps: ::prost::alloc::vec::Vec<SwapInfo>,
+    pub victim_swaps: ::prost::alloc::vec::Vec<NormalizedSwap>,
     #[prost(message, repeated, tag="3")]
-    pub backrun: ::prost::alloc::vec::Vec<SwapInfo>,
+    pub backrun: ::prost::alloc::vec::Vec<NormalizedSwap>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct SwapInfo {
+pub struct SwapsOutput {
+    #[prost(message, repeated, tag="1")]
+    pub data: ::prost::alloc::vec::Vec<NormalizedSwap>,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct NormalizedSwap {
     #[prost(uint64, required, tag="1")]
     pub block_slot: u64,
     #[prost(string, required, tag="2")]
@@ -50,5 +56,9 @@ pub struct SwapInfo {
     pub inner_program: ::prost::alloc::string::String,
     #[prost(string, required, tag="16")]
     pub outer_program: ::prost::alloc::string::String,
+    #[prost(uint64, required, tag="17")]
+    pub priority_fee: u64,
+    #[prost(string, required, tag="18")]
+    pub block_date: ::prost::alloc::string::String,
 }
 // @@protoc_insertion_point(module)

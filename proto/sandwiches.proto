@@ -6,12 +6,16 @@ message SandwichOutput {
     repeated Sandwich data = 1;
 }
 message Sandwich {
-    repeated SwapInfo frontrun = 1;
-    repeated SwapInfo victim_swaps = 2;
-    repeated SwapInfo backrun = 3;
+    repeated NormalizedSwap frontrun = 1;
+    repeated NormalizedSwap victim_swaps = 2;
+    repeated NormalizedSwap backrun = 3;
 }
 
-message SwapInfo {
+message SwapsOutput {
+    repeated NormalizedSwap data = 1;
+}
+
+message NormalizedSwap {
     required uint64 block_slot = 1;
     required string tx_id = 2;
     required string signer = 3;
@@ -28,4 +32,6 @@ message SwapInfo {
     required uint32 transaction_index = 14;
     required string inner_program = 15;
     required string outer_program = 16;
+    required uint64 priority_fee = 17;
+    required string block_date = 18;
 }
