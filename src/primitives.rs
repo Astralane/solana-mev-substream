@@ -7,17 +7,17 @@ impl NormalizedSwap {
         //if amount is -ve then it is token_in
         let (token_in, token_out, amount_in, amount_out) = if value.base_amount.is_sign_negative() {
             (
-                value.base_mint,
                 value.quote_mint,
-                value.base_amount.abs(),
+                value.base_mint,
                 value.quote_amount.abs(),
+                value.base_amount.abs(),
             )
         } else {
             (
-                value.quote_mint,
                 value.base_mint,
-                value.quote_amount.abs(),
+                value.quote_mint,
                 value.base_amount.abs(),
+                value.quote_amount.abs(),
             )
         };
         NormalizedSwap {
